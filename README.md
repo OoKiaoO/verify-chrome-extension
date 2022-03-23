@@ -11,7 +11,8 @@ Version 1.0
 ### Setup & Local Updates
 
 - Download the latest extension version from https://github.com/OoKiaoO/verify-chrome-extension
--- Click on the green "Code" button and choose the "Download ZIP" option, save the folder on your local machine
+
+- Click on the green "Code" button and choose the "Download ZIP" option, save the folder on your local machine
 
 - Launch Google Chrome and open the extensions page (Settings > Extensions)
 
