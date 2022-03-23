@@ -1,0 +1,18 @@
+{
+  "name": "Verify",
+  "version": "1.0",
+  "description": "Make sure all your items are verified!",
+  "manifest_version": 3,
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "scripting",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
