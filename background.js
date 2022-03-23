@@ -1,12 +1,12 @@
 console.log("Hello from the back!");
 
-const handleUpdate = (tabId, changeInfo, tab) => {
+const handlePageUpdate = (tabId, changeInfo, tab) => {
   console.log("Tab updated!");
-  const regex = /^(http:\/\/|https:\/\/)app\.skulabs\.com\/order\?store\_id\=5f2bc4861c9d444a93783768&order\_number\=JCS?[0-9]{7,9}$/gm;
+  const orderPage = /^(http:\/\/|https:\/\/)app\.skulabs\.com\/order\?store\_id\=5f2bc4861c9d444a93783768&order\_number\=JCS?[0-9]{7,9}$/gm;
 
-  if (tab.url.match(regex) !== null) {
+  if (tab.url.match(orderPage) !== null) {
     // url matched; do something here
-    chrome.tabs.onUpdated.removeListener(handleUpdate);
+    chrome.tabs.onUpdated.removeListener(handlePageUpdate);
     let messageReceived = false;
 
     // executing content script
@@ -16,79 +16,56 @@ const handleUpdate = (tabId, changeInfo, tab) => {
     });
     console.log("script executed, waiting for message");
 
+    const sendUpdate = () => {
+      if (!messageReceived) {
+        console.log("Reactivating onUpdated event!")
+        chrome.tabs.onUpdated.addListener(handlePageUpdate);
+      }
+    }
+
+    chrome.webNavigation.onReferenceFragmentUpdated.addListener(sendUpdate);
+    chrome.webNavigation.onHistoryStateUpdated.addListener(sendUpdate);
+
     // setting up listeners for messages sent from content script after click event
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.popupAlert === "yes") {
         messageReceived = true;
+        chrome.webNavigation.onHistoryStateUpdated.removeListener(sendUpdate);
+        chrome.webNavigation.onReferenceFragmentUpdated.removeListener(sendUpdate);  
         console.log("message received! Reactivating update listener!");
-        chrome.tabs.onUpdated.addListener(handleUpdate);
+        chrome.tabs.onUpdated.addListener(handlePageUpdate);
       } else if (request.popupAlert === "no") {
         messageReceived = true;
+        chrome.webNavigation.onHistoryStateUpdated.removeListener(sendUpdate);
+        chrome.webNavigation.onReferenceFragmentUpdated.removeListener(sendUpdate);
         console.log("no popup activated, running script again");
-        chrome.tabs.onUpdated.addListener(handleUpdate);
-      }
-    });
-
-    chrome.webNavigation.onReferenceFragmentUpdated.addListener(() => { 
-      console.log("REF FRAGMENT UPDATED - Navigating away from this page!");
-      if (!messageReceived) {
-        console.log("Reactivating onUpdated event!")
-        chrome.tabs.onUpdated.addListener(handleUpdate);
-      }
-    });
-
-    chrome.webNavigation.onHistoryStateUpdated.addListener(() => { 
-      console.log("HISTORY STATE UPDATED - Navigating away from this page!");
-      if (!messageReceived) {
-        console.log("Reactivating onUpdated event!")
-        chrome.tabs.onUpdated.addListener(handleUpdate);
+        chrome.tabs.onUpdated.addListener(handlePageUpdate);
       }
     });
   }
 };
 
-chrome.tabs.onUpdated.addListener(handleUpdate);
-
-// const filter = {
-//   url: [
-//     {
-//       urlMatches: 'https://app.skulabs.com/order?store_id=5f2bc4861c9d444a93783768&order_number=JCS*',
-//     },
-//   ],
-// };
-
-// chrome.webNavigation.onCompleted.addListener(() => {
-//   console.log("WEB NAV ON COMPLETED EVENT FIRED WITH FILTER!!");
-// }, filter);
-
-
-
-
-
-// chrome.browserAction.onClicked.addListener(checkVerified);
-
-// function checkVerified(tab) {
-//   let msg = {
-//     txt: "Hello!"
-//   };
-//   chrome.tabs.sendMessage(tab.id, msg);
-//   // console.log("Verified!!");
+// const sendUpdate = (message) => {
+//   if (!message) {
+//     console.log("Reactivating onUpdated event!")
+//     chrome.tabs.onUpdated.addListener(handlePageUpdate);
+//   }
 // }
 
-// const filter = {
-//   url: [
-//     {
-//       urlMatches: 'https://app.skulabs.com/order?store_id=5f2bc4861c9d444a93783768&order_number=JCS*',
-//     },
-//   ],
-// };
+chrome.tabs.onUpdated.addListener(handlePageUpdate);
 
-// chrome.webNavigation.onCompleted.addListener(() => {
-//   console.log("The user has loaded my favorite website!");
-// }, filter);
-
-// chrome.scripting.registerContentScript({
-//   matches: ['https://app.skulabs.com/order?store_id=5f2bc4861c9d444a93783768&order_number=JCS*'],
-//   run_at: 'document_idle',
-//   js: ['content.js']
+// chrome.webNavigation.onBeforeNavigate.addListener(() => { 
+//   console.log("ON BEFORE NAVIGATE - Navigating away from this page!");
+// });
+// chrome.webNavigation.onCommitted.addListener(() => { 
+//   console.log("ON COMMITED - Navigating away from this page!");
+// });
+// chrome.webNavigation.onCreatedNavigationTarget.addListener(() => { 
+//   console.log("CREATED NAV. TARGET - Navigating away from this page!");
+// });
+// chrome.webNavigation.onDOMContentLoaded.addListener(() => { 
+//   console.log("DOM CONTENT LOADED - Navigating away from this page!");
+// });
+// chrome.webNavigation.onTabReplaced.addListener(() => { 
+//   console.log("ON TAB REPLACED - Navigating away from this page!");
 // });

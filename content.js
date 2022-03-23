@@ -2,7 +2,7 @@
 (() => {
   console.log("CHROME EXT. GO!");
 
-  const activatePopup = (e) => {
+  const activatePopup = () => {
     console.log("content script initiated!");
 
     const checkForJS_Finish = () =>{
@@ -20,20 +20,17 @@
             {
               alert("Some items in this order are not verified!"); // Send POPUP alert on screen
               chrome.runtime.sendMessage({popupAlert: "yes"}); // Send message to backround to reactivate page update listener
-              // shipButton.addEventListener("click", handleClickAlert); // keep listening for click events on Ship button
-
-              // ** Uncaught Error in promise: once click event has fired once, if page is not updated and it will fire again, 
-              // background is not waiting for a new message but a new message is sent from content script on new click ev.
-              // TODO: create general loop with message receiving listener to catch lost messages & avoid errors.
+              // TODO: create general loop with message receiving listener to catch lost messages & avoid console errors.
           } else {
             chrome.runtime.sendMessage({popupAlert: "no"});
           }
         }
+
         shipButton.addEventListener("click", handleClickAlert);
       }
     }
     const jsInitCheckTimer = setInterval(checkForJS_Finish, 1000);
   }
 
-  activatePopup();;
+  activatePopup();
 }) ();
