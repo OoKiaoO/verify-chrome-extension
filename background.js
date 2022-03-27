@@ -5,7 +5,7 @@ const handlePageUpdate = (tabId, changeInfo, tab) => {
   const orderPage = /^(http:\/\/|https:\/\/)app\.skulabs\.com\/order\?store\_id\=5f2bc4861c9d444a93783768&order\_number\=JCS?[0-9]{7,9}$/gm;
 
   if (tab.url.match(orderPage) !== null) {
-    // url matched; do something here
+    // url matched
     chrome.tabs.onUpdated.removeListener(handlePageUpdate);
     let messageReceived = false;
 
@@ -16,28 +16,29 @@ const handlePageUpdate = (tabId, changeInfo, tab) => {
     });
     console.log("script executed, waiting for message");
 
-    const sendUpdate = () => {
+    // event handler to be called to reactivate the chrome tab updated listener
+    const handleUpdate = () => {
       if (!messageReceived) {
         console.log("Reactivating onUpdated event!")
         chrome.tabs.onUpdated.addListener(handlePageUpdate);
       }
     }
 
-    chrome.webNavigation.onReferenceFragmentUpdated.addListener(sendUpdate);
-    chrome.webNavigation.onHistoryStateUpdated.addListener(sendUpdate);
+    chrome.webNavigation.onReferenceFragmentUpdated.addListener(handleUpdate);
+    chrome.webNavigation.onHistoryStateUpdated.addListener(handleUpdate);
 
     // setting up listeners for messages sent from content script after click event
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.popupAlert === "yes") {
         messageReceived = true;
-        chrome.webNavigation.onHistoryStateUpdated.removeListener(sendUpdate);
-        chrome.webNavigation.onReferenceFragmentUpdated.removeListener(sendUpdate);  
+        chrome.webNavigation.onHistoryStateUpdated.removeListener(handleUpdate);
+        chrome.webNavigation.onReferenceFragmentUpdated.removeListener(handleUpdate);  
         console.log("message received! Reactivating update listener!");
         chrome.tabs.onUpdated.addListener(handlePageUpdate);
       } else if (request.popupAlert === "no") {
         messageReceived = true;
-        chrome.webNavigation.onHistoryStateUpdated.removeListener(sendUpdate);
-        chrome.webNavigation.onReferenceFragmentUpdated.removeListener(sendUpdate);
+        chrome.webNavigation.onHistoryStateUpdated.removeListener(handleUpdate);
+        chrome.webNavigation.onReferenceFragmentUpdated.removeListener(handleUpdate);
         console.log("no popup activated, running script again");
         chrome.tabs.onUpdated.addListener(handlePageUpdate);
       }
@@ -45,15 +46,10 @@ const handlePageUpdate = (tabId, changeInfo, tab) => {
   }
 };
 
-// const sendUpdate = (message) => {
-//   if (!message) {
-//     console.log("Reactivating onUpdated event!")
-//     chrome.tabs.onUpdated.addListener(handlePageUpdate);
-//   }
-// }
-
 chrome.tabs.onUpdated.addListener(handlePageUpdate);
 
+
+// CHROME MAIN WEB NAV EVENT LISTENERS
 // chrome.webNavigation.onBeforeNavigate.addListener(() => { 
 //   console.log("ON BEFORE NAVIGATE - Navigating away from this page!");
 // });
